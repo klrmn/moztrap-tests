@@ -6,29 +6,23 @@
 
 from selenium.webdriver.common.by import By
 
+from pages.page import Page
 from pages.base_page import MozTrapBasePage
+from pages.create_run_page import MozTrapEditRunPage
 
 
 class MozTrapManageRunsPage(MozTrapBasePage):
 
     _page_title = 'MozTrap'
 
-    _delete_run_locator = (By.CSS_SELECTOR, '#manageruns .itemlist .listitem[data-title="%(run_name)s"] .action-delete')
-    _run_activate_locator = (By.CSS_SELECTOR, '#manageruns .itemlist .listitem[data-title="%(run_name)s"] .status-action.active')
-    _run_status_locator = (By.CSS_SELECTOR, '#manageruns .itemlist .listitem[data-title="%(run_name)s"] .status-title')
     _filter_input_locator = (By.ID, 'text-filter')
     _filter_suggestion_locator = (By.CSS_SELECTOR, '#filter .textual .suggest .suggestion[data-type="name"][data-name="%(filter_name)s"]')
     _filter_locator = (By.CSS_SELECTOR, '#filterform .filter-group input[data-name="name"][value="%(filter_name)s"]:checked')
+    _run_item_locator = (By.CSS_SELECTOR, '#manageruns .itemlist .listitem')
 
     def go_to_manage_runs_page(self):
         self.selenium.get(self.base_url + '/manage/runs/')
         self.is_the_current_page
-
-    def delete_run(self, name='Test Run'):
-        _delete_locator = (self._delete_run_locator[0], self._delete_run_locator[1] % {'run_name': name})
-
-        self.selenium.find_element(*_delete_locator).click()
-        self.wait_for_ajax()
 
     def filter_runs_by_name(self, name):
         _filter_suggestion_locator = (self._filter_suggestion_locator[0], self._filter_suggestion_locator[1] % {'filter_name': name})
@@ -43,11 +37,30 @@ class MozTrapManageRunsPage(MozTrapBasePage):
         self.selenium.find_element(*self._filter_locator).click()
         self.wait_for_ajax()
 
-    def activate_run(self, name='Test Run'):
-        _run_activate_locator = (self._run_activate_locator[0], self._run_activate_locator[1] % {'run_name': name})
-        _run_status_locator = (self._run_status_locator[0], self._run_status_locator[1] % {'run_name': name})
+    @property
+    def get_runs(self):
+        runs = self.selenium.find_elements(*self._run_item_locator)
+        return [self.Run(self.testsetup, run) for run in runs]
 
-        self.selenium.find_element(*_run_status_locator).click()
-        self.selenium.find_element(*_run_activate_locator).click()
+    class Run(Page):
+        _delete_run_locator = (By.CSS_SELECTOR, '.action-delete')
+        _run_activate_locator = (By.CSS_SELECTOR, '.status-action.active')
+        _run_status_locator = (By.CSS_SELECTOR, '.status-title')
+        _edit_run_locator = (By.CSS_SELECTOR, 'a.edit-link')
 
-        self.wait_for_ajax()
+        def __init__(self, testsetup, webelement):
+            Page.__init__(self, testsetup)
+            self.webelement = webelement
+
+        def delete(self):
+            self.webelement.find_element(*self._delete_run_locator).click()
+            self.wait_for_ajax()
+
+        def edit(self):
+            self.webelement.find_element(*self._edit_run_locator).click()
+            return MozTrapEditRunPage(self.testsetup)
+
+        def activate(self):
+            self.webelement.find_element(*self._run_status_locator).click()
+            self.webelement.find_element(*self._run_activate_locator).click()
+            self.wait_for_ajax()

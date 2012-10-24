@@ -82,8 +82,9 @@ class BaseTest(object):
         if activate:
             manage_runs_pg = MozTrapManageRunsPage(mozwebqa)
             manage_runs_pg.filter_runs_by_name(name=run['name'])
-            manage_runs_pg.activate_run(name=run['name'])
-
+            runs = manage_runs_pg.get_runs
+            runs[0].activate()
+        
         return run
 
     def delete_run(self, mozwebqa, run, delete_version=False, delete_product=False):
@@ -91,7 +92,8 @@ class BaseTest(object):
 
         manage_runs_pg.go_to_manage_runs_page()
         manage_runs_pg.filter_runs_by_name(name=run['name'])
-        manage_runs_pg.delete_run(name=run['name'])
+        runs = manage_runs_pg.get_runs
+        runs[0].delete()
 
         if delete_version:
             self.delete_version(mozwebqa, version=run['version'], delete_product=delete_product)
