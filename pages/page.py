@@ -63,7 +63,7 @@ class Page(object):
 
     def wait_for_ajax(self):
         WebDriverWait(self.selenium, self.timeout).until(
-            lambda s: s.execute_script("return jQuery.active == 0"),
+            lambda s: s.execute_script('return (typeof jQuery !== "undefined" && jQuery.active == 0)'),
             "Wait for AJAX timed out after %s seconds" % self.timeout)
 
     def type_in_element(self, locator, text):

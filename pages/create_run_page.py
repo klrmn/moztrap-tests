@@ -25,8 +25,9 @@ class MozTrapEditRunPage(MozTrapBasePage):
     _remove_selected_suites_locator = (By.CSS_SELECTOR, '.multiselect .include-exclude .action-exclude')
     _submit_locator = (By.CSS_SELECTOR, '#run-add-form .form-actions > button')
 
-    # Note on __init__: it fails with 'ReferenceError: jQuery is not defined' 
-    # if you try to wait_for_ajax
+    def __init__(self, testsetup):
+        MozTrapBasePage.__init__(self, testsetup)
+        self.wait_for_ajax()
 
     def fill_fields(self, **kwargs):
         '''
