@@ -84,7 +84,7 @@ class BaseTest(object):
             manage_runs_pg.filter_runs_by_name(name=run['name'])
             runs = manage_runs_pg.get_runs
             runs[0].activate()
-        
+
         return run
 
     def delete_run(self, mozwebqa, run, delete_version=False, delete_product=False):
