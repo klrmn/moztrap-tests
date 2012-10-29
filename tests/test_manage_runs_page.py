@@ -84,3 +84,57 @@ class TestManageRunsPage(BaseTest):
         for suite in [suite1, suite2]:
             self.delete_suite(mozwebqa_logged_in, suite)
         self.delete_product(mozwebqa_logged_in, product)
+
+    @pytest.mark.moztrap(2928)
+    @pytest.mark.native
+    def test_edit_existing_run_that_has_no_included_suites(self, mozwebqa_logged_in):
+        # setup
+        product = self.create_product(mozwebqa_logged_in)
+        suite1 = self.create_suite(mozwebqa_logged_in, product=product)
+        suite2 = self.create_suite(mozwebqa_logged_in, product=product)
+        case1 = self.create_case(mozwebqa_logged_in,
+            product=product, version=product['version'], suite_name=suite1['name'])
+        case2 = self.create_case(mozwebqa_logged_in,
+            product=product, version=product['version'], suite_name=suite1['name'])
+        case3 = self.create_case(mozwebqa_logged_in,
+            product=product, version=product['version'], suite_name=suite2['name'])
+        case4 = self.create_case(mozwebqa_logged_in,
+            product=product, version=product['version'], suite_name=suite2['name'])
+        run = self.create_run(mozwebqa_logged_in,
+            product=product, version=product['version'])
+
+        # go to manage runs page
+        manage_runs_pg = MozTrapManageRunsPage(mozwebqa_logged_in)
+        # find the run
+        manage_runs_pg.filter_runs_by_name(name=run['name'])
+        runs = manage_runs_pg.get_runs
+        # click edit
+        edit_run_pg = runs[0].edit()
+
+        assert len(edit_run_pg.included_suite_names) == 0
+        available_suites = edit_run_pg.available_suite_names
+        for suite in [suite1, suite2]:
+            assert suite['name'] in available_suites
+
+        # add suites to the run
+        edit_run_pg.add_suite(suite1['name'])
+        edit_run_pg.add_suite(suite2['name'])
+        # re-order suites to run suite2 first
+        edit_run_pg.drag_and_drop_suite(suite2['name'], suite1['name'])
+        # save
+        manage_runs_pg = edit_run_pg.click_save()
+        # click edit
+        manage_runs_pg.filter_runs_by_name(name=run['name'])
+        runs = manage_runs_pg.get_runs
+        edit_run_pg = runs[0].edit()
+        expected = [suite2['name'], suite1['name']]
+        actual = edit_run_pg.included_suite_names
+        assert actual == expected
+
+        # teardown
+        self.delete_run(mozwebqa_logged_in, run)
+        for case in [case1, case2, case3, case4]:
+            self.delete_case(mozwebqa_logged_in, case)
+        for suite in [suite1, suite2]:
+            self.delete_suite(mozwebqa_logged_in, suite)
+        self.delete_product(mozwebqa_logged_in, product)
