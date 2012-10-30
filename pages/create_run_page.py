@@ -130,7 +130,7 @@ class MozTrapEditRunPage(MozTrapBasePage):
         destination_suite_name
 
         ::Note::
-        This method does not work with some combinations of versions of 
+        This method does not work with some combinations of versions of
         Firefox / Selenium. It is known to work with FF12 + Selenium 2.18
         and FF15 + Selenium 2.25.
         '''
@@ -182,6 +182,11 @@ class MozTrapCreateRunPage(MozTrapEditRunPage):
         self.selenium.get(self.base_url + '/manage/run/add/')
         self.is_the_current_page
 
+    def set_product_version(self, product_version_name):
+        product_version_select = Select(self.selenium.find_element(*self._product_version_select_locator))
+        product_version_select.select_by_visible_text(product_version_name)
+        self.wait_for_ajax()
+
     def fill_fields(self, **kwargs):
         '''
         ::keyword args::
@@ -194,8 +199,7 @@ class MozTrapCreateRunPage(MozTrapEditRunPage):
         '''
 
         if 'product_version' in kwargs.keys():
-            product_version_select = Select(self.selenium.find_element(*self._product_version_select_locator))
-            product_version_select.select_by_visible_text(kwargs['product_version'])
+            self.set_product_version(kwargs['product_version'])
 
         MozTrapEditRunPage.fill_fields(self, **kwargs)
 

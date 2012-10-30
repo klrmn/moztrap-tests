@@ -6,6 +6,7 @@
 
 import pytest
 from unittestzero import Assert
+from selenium.webdriver.support.select import Select
 
 from pages.base_test import BaseTest
 from pages.manage_runs_page import MozTrapManageRunsPage
@@ -79,6 +80,64 @@ class TestManageRunsPage(BaseTest):
 
         # teardown
         self.delete_run(mozwebqa_logged_in, run)
+        for case in [case1, case2, case3, case4]:
+            self.delete_case(mozwebqa_logged_in, case)
+        for suite in [suite1, suite2]:
+            self.delete_suite(mozwebqa_logged_in, suite)
+        self.delete_product(mozwebqa_logged_in, product)
+
+    @pytest.mark.moztrap(2930)
+    def test_create_new_run_no_pre_loading(self, mozwebqa_logged_in):
+        # setup
+        product = self.create_product(mozwebqa_logged_in)
+        suite1 = self.create_suite(mozwebqa_logged_in, product=product)
+        suite2 = self.create_suite(mozwebqa_logged_in, product=product)
+        case1 = self.create_case(mozwebqa_logged_in,
+            product=product, version=product['version'], suite_name=suite1['name'])
+        case2 = self.create_case(mozwebqa_logged_in,
+            product=product, version=product['version'], suite_name=suite1['name'])
+        case3 = self.create_case(mozwebqa_logged_in,
+            product=product, version=product['version'], suite_name=suite2['name'])
+        case4 = self.create_case(mozwebqa_logged_in,
+            product=product, version=product['version'], suite_name=suite2['name'])
+
+        # go to manage runs page
+        manage_runs_pg = MozTrapManageRunsPage(mozwebqa_logged_in)
+        manage_runs_pg.go_to_manage_runs_page()
+        create_run_page = manage_runs_pg.click_add_run()
+
+        # available and included suites lists should be empty
+        assert len(create_run_page.available_suites) == 0
+        assert len(create_run_page.included_suites) == 0
+
+        # set the product version
+        create_run_page.set_product_version(product['version']['name'])
+
+        # available suites list should become populated
+        assert len(create_run_page.available_suites) == 2
+        assert len(create_run_page.included_suites) == 0
+
+        run_name = 'automated run 2930'
+        # fill in other fields and save
+        create_run_page.fill_fields(
+            name=run_name,
+            suite_list=[suite1['name']])
+
+        # find and edit suite
+        manage_runs_pg.go_to_manage_runs_page()
+        manage_runs_pg.filter_runs_by_name(run_name)
+        runs = manage_runs_pg.get_runs
+        runs[0].edit()
+
+        # verify suites
+        assert len(create_run_page.available_suites) == 1
+        assert suite1['name'] in create_run_page.included_suite_names
+
+        # teardown
+        manage_runs_pg.go_to_manage_runs_page()
+        manage_runs_pg.filter_runs_by_name(run_name)
+        runs = manage_runs_pg.get_runs
+        runs[0].delete()        
         for case in [case1, case2, case3, case4]:
             self.delete_case(mozwebqa_logged_in, case)
         for suite in [suite1, suite2]:

@@ -19,10 +19,16 @@ class MozTrapManageRunsPage(MozTrapBasePage):
     _filter_suggestion_locator = (By.CSS_SELECTOR, '#filter .textual .suggest .suggestion[data-type="name"][data-name="%(filter_name)s"]')
     _filter_locator = (By.CSS_SELECTOR, '#filterform .filter-group input[data-name="name"][value="%(filter_name)s"]:checked')
     _run_item_locator = (By.CSS_SELECTOR, '#manageruns .itemlist .listitem')
+    _new_run_button_locator = (By.LINK_TEXT, 'create a test run')
 
     def go_to_manage_runs_page(self):
         self.selenium.get(self.base_url + '/manage/runs/')
         self.is_the_current_page
+
+    def click_add_run(self):
+        self.selenium.find_element(*self._new_run_button_locator).click()
+        from pages.create_run_page import MozTrapCreateRunPage
+        return MozTrapCreateRunPage(self.testsetup)
 
     def filter_runs_by_name(self, name):
         _filter_suggestion_locator = (self._filter_suggestion_locator[0], self._filter_suggestion_locator[1] % {'filter_name': name})
