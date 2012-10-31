@@ -60,8 +60,8 @@ class TestManageRunsPage(BaseTest):
 
         # not yet deployed to stage
         # assert edit_run_pg.product_version == run['product_version']
-        assert suite1['name'] in edit_run_pg.included_suite_names
-        assert suite2['name'] in edit_run_pg.available_suite_names
+        Assert.contains(suite1['name'], edit_run_pg.included_suite_names)
+        Assert.contains(suite2['name'], edit_run_pg.available_suite_names)
 
         # add suite2 to the run
         edit_run_pg.add_suite(suite2['name'])
@@ -75,7 +75,7 @@ class TestManageRunsPage(BaseTest):
         edit_run_pg = runs[0].edit()
         expected = [suite2['name'], suite1['name']]
         actual = edit_run_pg.included_suite_names
-        assert actual == expected
+        Assert.equal(actual, expected)
 
         # teardown
         self.delete_run(mozwebqa_logged_in, run)
