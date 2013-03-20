@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import requests
+import json
+
 from pages.home_page import MozTrapHomePage
 from pages.run_tests_page import MozTrapRunTestsPage
 from pages.create_case_page import MozTrapCreateCasePage
@@ -25,6 +28,32 @@ class BaseTest(object):
     '''
     Base class for all Tests
     '''
+
+    def create_product_API(self, mozwebqa, profile=None):
+
+        uri = "api/v1/product"
+        user = mozwebqa.credentials['default']
+        post_params = {
+            'username': user['name'],
+            'api_key': user['api_key'],
+        }
+        post_data = {
+            u'name': u'My Test',
+            u'description': u'My Description',
+            u'productversions': [{u'version': u'v1'}]
+        }
+        try:
+            response = requests.post("%s/%s" % (mozwebqa.base_url, uri), params=post_params, data=post_data)
+            response.raise_for_status()
+            text = json.loads(response.text)
+            id = response.headers['location'].split('/')[-2]
+
+            if response.status_code == 200:
+                print "Created product %s." % post_data['name']
+            else:
+                print "Failed to create %s.\n%s" % (post_data['name'], response.text)
+        except Exception as e:
+            print "Failed to create %s.\n%s" % (post_data['name'], e)
 
     def create_product(self, mozwebqa, profile=None):
         create_product_pg = MozTrapCreateProductPage(mozwebqa)
