@@ -31,29 +31,38 @@ class BaseTest(object):
 
     def create_product_API(self, mozwebqa, profile=None):
 
-        uri = "api/v1/product"
+        uri = "api/v1/product/"
         user = mozwebqa.credentials['default']
         post_params = {
-            'username': user['name'],
-            'api_key': user['api_key'],
+            u'username': unicode(user['name']),
+            u'api_key': unicode(user['api_key']),
+            u'format': u'json',
         }
         post_data = {
             u'name': u'My Test',
             u'description': u'My Description',
             u'productversions': [{u'version': u'v1'}]
         }
+        headers={"content-type": "application/json"}
         try:
-            response = requests.post("%s/%s" % (mozwebqa.base_url, uri), params=post_params, data=post_data)
+            response = requests.post(
+                "%s/%s" % (mozwebqa.base_url, uri), 
+                params=post_params, 
+                data=json.dumps(post_data),
+                headers=headers)
             response.raise_for_status()
             text = json.loads(response.text)
-            id = response.headers['location'].split('/')[-2]
 
-            if response.status_code == 200:
+            if response.status_code == 201:
                 print "Created product %s." % post_data['name']
+                prod_id = response.headers['location'].split('/')[-2]
             else:
-                print "Failed to create %s.\n%s" % (post_data['name'], response.text)
+                print "Failed to create %s with %s.\n%s" % (
+                    post_data['name'], response.status_code, response.text)
         except Exception as e:
             print "Failed to create %s.\n%s" % (post_data['name'], e)
+
+        return prod_id
 
     def create_product(self, mozwebqa, profile=None):
         create_product_pg = MozTrapCreateProductPage(mozwebqa)
